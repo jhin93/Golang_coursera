@@ -3,11 +3,8 @@ package main
 import "fmt"
 
 func main() {
-	var x int = 1
-	var y int
-	var ip *int
-
-	ip = &x
-	y = *ip
-	fmt.Println(y) // 1
+	// new() function creates a variable and returns a pointer to the variable
+	ptr := new(int) // 0xc000012088
+	*ptr = 3
+	fmt.Println(*ptr) // 3
 }
