@@ -3,8 +3,13 @@ package main
 import "fmt"
 
 func main() {
-	// new() function creates a variable and returns a pointer to the variable
-	ptr := new(int) // 0xc000012088
-	*ptr = 3
-	fmt.Println(ptr) // 3
+	type Grades int
+	const (
+		A Grades = iota // 0
+		B               // 1
+		C               // 2
+		D               // 3
+		F               // 4
+	)
+	fmt.Println(B)
 }
