@@ -12,13 +12,14 @@ func main() {
 	if len(args) < 2 {
 		fmt.Println("Type floating point number")
 	}
-
+	// Declare input variable
 	input := args[1]
 
+	// Call Trunc func in trunc.go
 	number, err := trunc.Trunc(input)
 	if err != nil {
-		return // 왜 여기에 return 0 하면 에러가 나는가
+		return
 	}
-
+	// Print the result
 	fmt.Println("Truncated number : ", number)
 }
