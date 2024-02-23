@@ -29,9 +29,6 @@ func main() {
 	firstLetter := splitedInput[0]
 	lastLetter := splitedInput[len(splitedInput)-1]
 	checkLetterA := strings.Contains(lowerInput, "a")
-	// fmt.Println(firstLetter)
-	// fmt.Println(lastLetter)
-	// fmt.Println(checkLetterA)
 
 	if firstLetter == "i" && lastLetter == "n" && checkLetterA {
 		fmt.Println("Found!")
