@@ -38,5 +38,20 @@ func main() {
 		fmt.Println("Do not type more than 10 integers. Try again")
 		return
 	}
+	BubbleSort(intSlice)
+	fmt.Println("Sorted slice of integers : ", intSlice)
+}
 
+func BubbleSort(slice []int) {
+	for i := 0; i < len(slice); i++ {
+		for j := 0; j < len(slice)-i-1; j++ {
+			if slice[j] > slice[j+1] {
+				Swap(slice, j)
+			}
+		}
+	}
+}
+
+func Swap(slice []int, i int) {
+	slice[i], slice[i+1] = slice[i+1], slice[i]
 }
