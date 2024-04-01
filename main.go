@@ -13,63 +13,36 @@ type Animal interface {
 	Speak()
 }
 
-type Cow struct {
+type DefaultAnimal struct {
 	Name       string
 	Food       string
 	Locomotion string
 	Sound      string
+}
+
+type Cow struct {
+	DefaultAnimal
 }
 
 type Bird struct {
-	Name       string
-	Food       string
-	Locomotion string
-	Sound      string
+	DefaultAnimal
 }
 
 type Snake struct {
-	Name       string
-	Food       string
-	Locomotion string
-	Sound      string
+	DefaultAnimal
 }
 
-func (c Cow) Eat() {
-	fmt.Println(c.Food)
+func (a DefaultAnimal) Eat() {
+	fmt.Println(a.Food)
 }
 
-func (c Cow) Move() {
-	fmt.Println(c.Locomotion)
+func (a DefaultAnimal) Move() {
+	fmt.Println(a.Locomotion)
 }
 
-func (c Cow) Speak() {
-	fmt.Println(c.Sound)
+func (a DefaultAnimal) Speak() {
+	fmt.Println(a.Sound)
 }
-
-func (b Bird) Eat() {
-	fmt.Println(b.Food)
-}
-
-func (b Bird) Move() {
-	fmt.Println(b.Locomotion)
-}
-
-func (b Bird) Speak() {
-	fmt.Println(b.Sound)
-}
-
-func (s Snake) Eat() {
-	fmt.Println(s.Food)
-}
-
-func (s Snake) Move() {
-	fmt.Println(s.Locomotion)
-}
-
-func (s Snake) Speak() {
-	fmt.Println(s.Sound)
-}
-
 func main() {
 	newAnimal := make(map[string]Animal)
 	scanner := bufio.NewScanner(os.Stdin)
@@ -91,13 +64,13 @@ func main() {
 		case "newanimal":
 			switch stringSlice[2] {
 			case "cow":
-				newAnimal[stringSlice[1]] = Cow{Name: stringSlice[1], Food: "grass", Locomotion: "walk", Sound: "moo"}
+				newAnimal[stringSlice[1]] = Cow{DefaultAnimal{Name: stringSlice[1], Food: "grass", Locomotion: "walk", Sound: "moo"}}
 				fmt.Println("Created it!")
 			case "bird":
-				newAnimal[stringSlice[1]] = Bird{Name: stringSlice[1], Food: "worms", Locomotion: "fly", Sound: "peep"}
+				newAnimal[stringSlice[1]] = Bird{DefaultAnimal{Name: stringSlice[1], Food: "worms", Locomotion: "fly", Sound: "peep"}}
 				fmt.Println("Created it!")
 			case "snake":
-				newAnimal[stringSlice[1]] = Bird{Name: stringSlice[1], Food: "mice", Locomotion: "slither", Sound: "hsss"}
+				newAnimal[stringSlice[1]] = Bird{DefaultAnimal{Name: stringSlice[1], Food: "mice", Locomotion: "slither", Sound: "hsss"}}
 				fmt.Println("Created it!")
 			default:
 				fmt.Println("Invalid animal type. Please enter 'cow', 'bird', or 'snake'.")
