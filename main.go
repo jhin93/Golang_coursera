@@ -2,26 +2,21 @@ package main
 
 import (
 	"fmt"
-	"sync"
-	"time"
 )
 
-func worker(id int, wg *sync.WaitGroup) {
-	defer wg.Done() // 고루틴이 종료될 때마다 WaitGroup의 카운터를 감소시킵니다.
-	fmt.Printf("Worker %d 시작\n", id)
-	time.Sleep(time.Second) // 임의의 작업을 수행하는 시간 대신 sleep을 사용합니다.
-	fmt.Printf("Worker %d 완료\n", id)
-}
-
 func main() {
-	var wg sync.WaitGroup
+	// 용량이 2인 버퍼드 채널 생성
+	c := make(chan int, 2)
 
-	for i := 1; i <= 3; i++ {
-		wg.Add(1) // 고루틴을 시작하기 전에 WaitGroup의 카운터를 증가시킵니다.
-		go worker(i, &wg)
-	}
+	// 채널에 데이터를 가득 채움
+	c <- 1
+	c <- 2
 
-	wg.Wait() // 모든 고루틴이 종료될 때까지 메인 고루틴을 대기시킵니다.
+	// 채널에 데이터가 가득 차 있으므로 송신자가 블록됨
+	// 이후 코드는 실행되지 않음
+	c <- 3 // 이부분에서 에러 발생
 
-	fmt.Println("모든 작업 완료")
+	// 메인 함수에서는 채널에서 데이터를 받아 출력
+	fmt.Println(<-c)
+	fmt.Println(<-c)
 }
