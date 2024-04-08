@@ -53,6 +53,8 @@ func main() {
 	fmt.Println("typed integer:", intSlice)
 
 	splitSlices := splitSliceEqually(intSlice, 4)
+
+	fmt.Println("splitSlices:", splitSlices)
 	for _, split := range splitSlices {
 		sort.Ints(split)
 		fmt.Println(split)
