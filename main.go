@@ -4,14 +4,33 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"sort"
 	"strconv"
 	"strings"
 )
 
+func splitSliceEqually(s []int, parts int) [][]int {
+	var result [][]int
+	totalLen := len(s)
+	baseSize := totalLen / parts
+	remainder := totalLen % parts
+
+	start := 0
+	for i := 0; i < parts; i++ {
+		end := start + baseSize
+		if i < remainder {
+			end++
+		}
+		result = append(result, s[start:end])
+		start = end
+	}
+	return result
+}
+
 func main() {
 	var intSlice []int
 	scanner := bufio.NewScanner(os.Stdin)
-	fmt.Println("Type series of integers. Each integers are distinguished by blank.")
+	fmt.Println("Type at least 4 integers. Each integers are distinguished by blank.")
 	scanner.Scan()
 	inputLine := scanner.Text()
 	// Checking Err
@@ -32,4 +51,10 @@ func main() {
 	}
 
 	fmt.Println("typed integer:", intSlice)
+
+	splitSlices := splitSliceEqually(intSlice, 4)
+	for _, split := range splitSlices {
+		sort.Ints(split)
+		fmt.Println(split)
+	}
 }
