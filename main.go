@@ -7,6 +7,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 )
 
 func splitSliceEqually(s []int, parts int) [][]int {
@@ -50,13 +51,23 @@ func main() {
 		intSlice = append(intSlice, num)
 	}
 
-	fmt.Println("typed integer:", intSlice)
-
 	splitSlices := splitSliceEqually(intSlice, 4)
 
-	fmt.Println("splitSlices:", splitSlices)
+	var wg sync.WaitGroup
 	for _, split := range splitSlices {
-		sort.Ints(split)
-		fmt.Println(split)
+		wg.Add(1)
+		go func(s []int) {
+			defer wg.Done()
+			sort.Ints(s)
+		}(split) // go 익명 함수를 split 슬라이스를 인자로 하여 즉시 호출
+		fmt.Println("Splited Slice : ", split)
 	}
+	wg.Wait()
+
+	var mergedSlice []int
+	for _, split := range splitSlices {
+		mergedSlice = append(mergedSlice, split...)
+		sort.Ints(mergedSlice)
+	}
+	fmt.Println("Result : ", mergedSlice)
 }
