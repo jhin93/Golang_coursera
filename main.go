@@ -1,25 +1,31 @@
 package main
 
 import (
-	"fmt"
-	"sync"
+    "fmt"
+    "time"
 )
 
-var i int = 0
-var wg sync.WaitGroup
-var mut sync.Mutex // 뮤텍스 변수 선언
-
-func inc() {
-	mut.Lock() // 뮤텍스로 변수 i의 접근을 잠금
-	i = i + 1
-	mut.Unlock() // 잠금 해제
-	wg.Done()
-}
-
 func main() {
-	wg.Add(2)
-	go inc()
-	go inc()
-	wg.Wait()
-	fmt.Println(i) // 예상 결과는 항상 2가 출력
+    c1 := make(chan string)
+    c2 := make(chan string)
+
+    go func() {
+        time.Sleep(1 * time.Second)
+        c1 <- "one"
+    }()
+    go func() {
+        time.Sleep(2 * time.Second)
+        c2 <- "two"
+    }()
+
+    for i := 0; i < 2; i++ {
+        select {
+        case msg1 := <-c1:
+            fmt.Println("Received", msg1)
+        case msg2 := <-c2:
+            fmt.Println("Received", msg2)
+        case <-time.After(3 * time.Second):
+            fmt.Println("timeout")
+        }
+    }
 }
