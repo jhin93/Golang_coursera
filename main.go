@@ -15,7 +15,7 @@ type Philo struct {
 	leftCS, rightCS *ChopS
 }
 
-func (p Philo) eat(wg *sync.WaitGroup) {
+func (p Philo) eat(philoId int, wg *sync.WaitGroup) {
 	// 3번만 먹는다는 조건 필요
 	// 3번 다 먹으면 defer wg.Done() 실행으로 waitGroup 감소
 	defer wg.Done()
@@ -23,12 +23,12 @@ func (p Philo) eat(wg *sync.WaitGroup) {
 		p.leftCS.Lock()
 		p.rightCS.Lock()
 
-		fmt.Println("eating")
+		fmt.Printf("starting to eat %d\n", philoId)
 
 		p.rightCS.Unlock()
 		p.leftCS.Unlock()
 
-		fmt.Println("finish")
+		fmt.Printf("finishing eating %d\n", philoId)
 	}
 }
 
@@ -47,8 +47,8 @@ func main() {
 		philos[i] = &Philo{leftCS: CSticks[i], rightCS: CSticks[(i+1)%5]}
 	}
 
-	for _, philo := range philos {
-		go philo.eat(&wg)
+	for num, philo := range philos {
+		go philo.eat(num, &wg)
 	}
 
 	wg.Wait()
