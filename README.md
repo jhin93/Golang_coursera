@@ -610,3 +610,82 @@ func main() {
 }
 
 ```
+
+5philo eat concurrently
+
+Implement the dining philosopher’s problem with the following constraints/modifications.
+
+1. There should be 5 philosophers sharing chopsticks, with one chopstick between each adjacent pair of philosophers.
+
+2. Each philosopher should eat only 3 times (not in an infinite loop as we did in lecture)
+
+3. The philosophers pick up the chopsticks in any order, not lowest-numbered first (which we did in lecture).
+
+4. In order to eat, a philosopher must get permission from a host which executes in its own goroutine.
+
+5. The host allows no more than 2 philosophers to eat concurrently.
+
+6. Each philosopher is numbered, 1 through 5.
+
+7. When a philosopher starts eating (after it has obtained necessary locks) it prints “starting to eat <number>” on a line by itself, where <number> is the number of the philosopher.
+
+8. When a philosopher finishes eating (before it has released its locks) it prints “finishing eating <number>” on a line by itself, where <number> is the number of the philosopher.
+
+```go
+package main
+
+import (
+	"fmt"
+	"sync"
+)
+
+var wg sync.WaitGroup
+
+type ChopS struct {
+	sync.Mutex
+}
+
+type Philo struct {
+	leftCS, rightCS *ChopS
+}
+
+func (p Philo) eat(philoId int, wg *sync.WaitGroup) {
+	// 3번만 먹는다는 조건 필요
+	// 3번 다 먹으면 defer wg.Done() 실행으로 waitGroup 감소
+	defer wg.Done()
+	for i := 0; i < 3; i++ {
+		p.leftCS.Lock()
+		p.rightCS.Lock()
+
+		fmt.Printf("starting to eat %d\n", philoId)
+
+		p.rightCS.Unlock()
+		p.leftCS.Unlock()
+
+		fmt.Printf("finishing eating %d\n", philoId)
+	}
+}
+
+func main() {
+	wg.Add(5)
+
+	// Making 5 Chopsticks
+	CSticks := make([]*ChopS, 5)
+	for i := 0; i < 5; i++ {
+		CSticks[i] = new(ChopS)
+	}
+
+	// Making 5 Philosophers
+	philos := make([]*Philo, 5)
+	for i := 0; i < 5; i++ {
+		philos[i] = &Philo{leftCS: CSticks[i], rightCS: CSticks[(i+1)%5]}
+	}
+
+	for num, philo := range philos {
+		go philo.eat(num, &wg)
+	}
+
+	wg.Wait()
+
+}
+```
