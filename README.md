@@ -637,55 +637,83 @@ package main
 import (
 	"fmt"
 	"sync"
+	"time"
 )
 
-var wg sync.WaitGroup
+type Chopstick chan bool // Chopstick을 bool 값을 갖는 채널로 정의합니다.
 
-type ChopS struct {
-	sync.Mutex
+func NewChopstick() Chopstick {
+	c := make(Chopstick, 1) // 젓가락을 사용할 수 있는 상태로 초기화합니다 (true가 버퍼에 저장).
+	c <- true
+	return c
 }
 
-type Philo struct {
-	leftCS, rightCS *ChopS
+type Philosopher struct {
+	id                   int        // 철학자의 번호
+	leftCS, rightCS      Chopstick  // 철학자가 사용할 두 젓가락
+	eatCount             int        // 현재까지 먹은 횟수
+	maxEatCount          int        // 최대 먹을 수 있는 횟수
+	permissionChan, done chan struct{} // 식사 시작 허가와 식사 완료를 알리는 채널
 }
 
-func (p Philo) eat(philoId int, wg *sync.WaitGroup) {
-	// 3번만 먹는다는 조건 필요
-	// 3번 다 먹으면 defer wg.Done() 실행으로 waitGroup 감소
-	defer wg.Done()
-	for i := 0; i < 3; i++ {
-		p.leftCS.Lock()
-		p.rightCS.Lock()
+func (p Philosopher) eat(wg *sync.WaitGroup) {
+	defer wg.Done() // 고루틴이 종료될 때 WaitGroup의 카운트를 감소시킵니다.
+	for p.eatCount < p.maxEatCount {
+		<-p.permissionChan // 호스트로부터 식사 시작 허가를 받습니다.
 
-		fmt.Printf("starting to eat %d\n", philoId)
+		<-p.leftCS // 왼쪽 젓가락을 잡습니다.
+		<-p.rightCS // 오른쪽 젓가락을 잡습니다.
 
-		p.rightCS.Unlock()
-		p.leftCS.Unlock()
+		fmt.Printf("starting to eat %d\n", p.id) // 식사 시작을 출력합니다.
+		time.Sleep(time.Second) // 식사 시간을 1초간 가정합니다.
+		fmt.Printf("finishing eating %d\n", p.id) // 식사 완료를 출력합니다.
 
-		fmt.Printf("finishing eating %d\n", philoId)
+		p.eatCount++ // 식사 횟수를 증가시킵니다.
+
+		p.leftCS <- true // 왼쪽 젓가락을 내려놓습니다.
+		p.rightCS <- true // 오른쪽 젓가락을 내려놓습니다.
+
+		p.done <- struct{}{} // 식사 완료를 호스트에게 알립니다.
+	}
+}
+
+func host(philosophers []*Philosopher) {
+	concurrentEaters := make(chan struct{}, 2) // 동시에 식사할 수 있는 철학자 수를 2명으로 제한합니다.
+
+	for _, p := range philosophers {
+		go func(p *Philosopher) {
+			for {
+				concurrentEaters <- struct{}{} // 동시 식사 자리를 하나 차지합니다.
+				p.permissionChan <- struct{}{} // 철학자에게 식사 시작을 허가합니다.
+				<-p.done // 철학자의 식사 완료를 기다립니다.
+				<-concurrentEaters // 동시 식사 자리를 반환합니다.
+			}
+		}(p)
 	}
 }
 
 func main() {
-	wg.Add(5)
-
-	// Making 5 Chopsticks
-	CSticks := make([]*ChopS, 5)
+	wg := &sync.WaitGroup{}
+	chopsticks := make([]*Chopstick, 5) // 5개의 젓가락을 생성합니다.
 	for i := 0; i < 5; i++ {
-		CSticks[i] = new(ChopS)
+		chopsticks[i] = NewChopstick() // 각 젓가락을 초기화합니다.
 	}
 
-	// Making 5 Philosophers
-	philos := make([]*Philo, 5)
+	philosophers := make([]*Philosopher, 5) // 5명의 철학자를 생성합니다.
 	for i := 0; i < 5; i++ {
-		philos[i] = &Philo{leftCS: CSticks[i], rightCS: CSticks[(i+1)%5]}
+		philosophers[i] = &Philosopher{
+			id:             i + 1,
+			leftCS:         chopsticks[i],
+			rightCS:        chopsticks[(i+1)%5],
+			maxEatCount:    3,
+			permissionChan: make(chan struct{}, 1),
+			done:           make(chan struct{}, 1),
+		}
+		wg.Add(1) // WaitGroup의 카운트를 증가시킵니다.
 	}
 
-	for num, philo := range philos {
-		go philo.eat(num, &wg)
-	}
+	go host(philosophers) // 호스트 고루틴을 시작합니다.
+	for _, p := range philosophers {
+		go p.eat(w
 
-	wg.Wait()
-
-}
 ```
