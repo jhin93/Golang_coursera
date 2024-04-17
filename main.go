@@ -26,9 +26,8 @@ func (p Philosopher) eat(wg *sync.WaitGroup) {
 	defer wg.Done()                  // 식사가 끝날 때 WaitGroup의 카운터를 감소시킵니다.
 	for p.eatCount < p.maxEatCount { // 최대 식사 횟수에 도달할 때까지 반복합니다.
 		<-p.permissionChan // 호스트로부터 식사를 시작할 수 있는 허가를 받습니다.
-
-		<-p.leftCS  // 왼쪽 젓가락을 잡습니다.
-		<-p.rightCS // 오른쪽 젓가락을 잡습니다.
+		<-p.leftCS         // 왼쪽 젓가락을 잡습니다. <-p.leftCS 가 가능한 이유는 NewChopstick() 함수로 초기화가 됐기 때문
+		<-p.rightCS        // 오른쪽 젓가락을 잡습니다. <-p.rightCS 가 가능한 이유는 NewChopstick() 함수로 초기화가 됐기 때문
 
 		fmt.Printf("starting to eat %d\n", p.id)  // 식사 시작을 알립니다.
 		time.Sleep(time.Second)                   // 식사 시간을 1초로 가정합니다.
@@ -49,10 +48,11 @@ func host(philosophers []*Philosopher) {
 	for _, p := range philosophers { // 모든 철학자에 대해 반복합니다.
 		go func(p *Philosopher) { // 각 철학자를 위한 고루틴을 시작합니다.
 			for {
-				concurrentEaters <- struct{}{} // 동시 식사 슬롯을 점유합니다.
+				concurrentEaters <- struct{}{} // 동시 식사 슬롯을 점유합니다. 'struct{}'는 타입, '{}'는 인스턴스. 'struct{}' 까지만 작성하면 정의일 뿐, 실제 메모리에 할당된 구조체가 아님. 'struct{}{}' 패턴은 데이터를 전송하지 않고 신호만을 전달하겠다는 의도.
 				p.permissionChan <- struct{}{} // 철학자에게 식사 시작 허가를 보냅니다.
-				<-p.done                       // 철학자의 식사 완료 신호를 기다립니다.
-				<-concurrentEaters             // 동시 식사 슬롯을 반환합니다.
+				// 이 시점에서 eat() 함수가 발동하고, 채널로 식사 마쳤다는 신호를 받음.
+				<-p.done           // 철학자의 식사 완료 신호를 기다립니다. eat() 함수가 p.done <- struct{}{} 으로 식사가 끝났다는 신호르 보내는 것을 받는 구문.
+				<-concurrentEaters // 동시 식사 슬롯을 반환합니다.
 			}
 		}(p)
 	}
